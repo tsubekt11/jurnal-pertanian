@@ -1,5 +1,4 @@
-# jurnal-pertanian
-Jurnal Pertanian 
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
