@@ -60,25 +60,6 @@
   </div>
 <script>
 function simpan(){
-  function tampilkanData(){
-  const riwayat = document.getElementById('riwayat');
-  const data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
-
-  riwayat.innerHTML = "<h3>📖 Riwayat Catatan</h3>";
-
-  data.forEach((item, index) => {
-    riwayat.innerHTML += `
-      <div class="card">
-        <b>Hari ke-${index + 1}</b><br>
-        📅 Tanggal: ${item.tanggal}<br>
-        🌱 HST: ${item.hst}<br>
-        📝 Kegiatan: ${item.kegiatan}
-      </div>
-    `;
-  });
-}
-
-tampilkanData();
   const dataBaru = {
     tanggal: document.getElementById('tanggal').value,
     hst: document.getElementById('hst').value,
@@ -94,21 +75,25 @@ tampilkanData();
   alert("Catatan tersimpan Alhamdulillah 🤲");
 }
 
-  function tampilkan(){
-    const data = JSON.parse(localStorage.getItem('jurnal_hari_ini'));
-    if(!data) return;
+function tampilkanData(){
+  const riwayat = document.getElementById('riwayat');
+  const data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
 
-    document.getElementById('hasil').innerHTML = `
+  riwayat.innerHTML = "<h3>📖 Riwayat Catatan</h3>";
+
+  data.forEach((item, index) => {
+    riwayat.innerHTML += `
       <div class="card">
-        <b>📌 Catatan Tersimpan</b><br><br>
-        📅 Tanggal: ${data.tanggal}<br>
-        🌱 HST: ${data.hst}<br>
-        📝 Kegiatan:<br>${data.kegiatan}
+        <b>Hari ke-${index + 1}</b><br>
+        📅 Tanggal: ${item.tanggal}<br>
+        🌱 HST: ${item.hst}<br>
+        📝 Kegiatan:<br>${item.kegiatan}
       </div>
     `;
-  }
+  });
+}
 
-  tampilkan();
+tampilkanData();
 </script>
 </body>
 </html>
