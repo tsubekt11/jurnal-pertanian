@@ -49,21 +49,41 @@
 
   <button onclick="simpan()">💾 Simpan Catatan</button>
     </div>
+    <hr>
+<div id="hasil"></div>
     <p>
       Ini adalah jurnal pertanian online milik Pak Teguh Subekti.
       <br>InsyaAllah akan dikembangkan bertahap.
     </p>
   </div>
-  <script>
+<script>
   function simpan(){
     const data = {
       tanggal: document.getElementById('tanggal').value,
       hst: document.getElementById('hst').value,
       kegiatan: document.getElementById('kegiatan').value
     };
+
     localStorage.setItem('jurnal_hari_ini', JSON.stringify(data));
+    tampilkan();
     alert("Catatan tersimpan Alhamdulillah 🤲");
   }
-  </script>
+
+  function tampilkan(){
+    const data = JSON.parse(localStorage.getItem('jurnal_hari_ini'));
+    if(!data) return;
+
+    document.getElementById('hasil').innerHTML = `
+      <div class="card">
+        <b>📌 Catatan Tersimpan</b><br><br>
+        📅 Tanggal: ${data.tanggal}<br>
+        🌱 HST: ${data.hst}<br>
+        📝 Kegiatan:<br>${data.kegiatan}
+      </div>
+    `;
+  }
+
+  tampilkan();
+</script>
 </body>
 </html>
