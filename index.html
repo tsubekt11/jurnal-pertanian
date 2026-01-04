@@ -73,6 +73,83 @@
 </div>
 
 <div class="card" id="riwayat"></div>
+  <div class="card">
+  <b>💰 Catatan Biaya & Upah</b><br><br>
+
+  <label>Tanggal</label>
+  <input type="date" id="tanggalBiaya">
+
+  <label>Jenis</label>
+  <select id="jenisBiaya">
+    <option value="Belanja">Belanja</option>
+    <option value="Upah">Upah</option>
+  </select>
+
+  <label>Keterangan</label>
+  <input type="text" id="keteranganBiaya"
+         placeholder="Contoh: pupuk NPK, upah tanam">
+
+  <label>Jumlah (Rp)</label>
+  <input type="number" id="jumlahBiaya" placeholder="Contoh: 150000">
+
+  <button onclick="simpanBiaya()">💾 Simpan Biaya</button>
+</div>
+
+<div class="card" id="riwayatBiaya"></div>
+<div class="card" id="totalBiaya"></div>
+// simpan biaya & upah
+function simpanBiaya(){
+  const tanggal = document.getElementById('tanggalBiaya').value;
+  const jenis = document.getElementById('jenisBiaya').value;
+  const ket = document.getElementById('keteranganBiaya').value;
+  const jumlah = parseInt(document.getElementById('jumlahBiaya').value);
+
+  if(!tanggal || !ket || !jumlah){
+    alert("Lengkapi data biaya 🙏");
+    return;
+  }
+
+  const dataBaru = { tanggal, jenis, ket, jumlah };
+
+  let data = JSON.parse(localStorage.getItem('jurnal_biaya')) || [];
+  data.push(dataBaru);
+
+  localStorage.setItem('jurnal_biaya', JSON.stringify(data));
+  tampilkanBiaya();
+
+  alert("Biaya tersimpan Alhamdulillah 🤲");
+}
+
+// tampilkan biaya & total
+function tampilkanBiaya(){
+  const riwayat = document.getElementById('riwayatBiaya');
+  const totalBox = document.getElementById('totalBiaya');
+  let data = JSON.parse(localStorage.getItem('jurnal_biaya')) || [];
+
+  data.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+  let total = 0;
+  riwayat.innerHTML = "<h3>📒 Riwayat Biaya</h3>";
+
+  data.forEach(item => {
+    total += item.jumlah;
+    riwayat.innerHTML += `
+      <div class="card">
+        📅 ${item.tanggal}<br>
+        💼 ${item.jenis}<br>
+        📝 ${item.ket}<br>
+        💰 Rp ${item.jumlah.toLocaleString()}
+      </div>
+    `;
+  });
+
+  totalBox.innerHTML = `
+    <b>📊 Total Modal Sementara</b><br>
+    <h2>Rp ${total.toLocaleString()}</h2>
+  `;
+}
+
+tampilkanBiaya();
 
 <script>
 // simpan data awal
