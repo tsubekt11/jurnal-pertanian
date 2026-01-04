@@ -48,6 +48,8 @@
   <textarea id="kegiatan" rows="4" placeholder="Contoh: penyemprotan, pemupukan..."></textarea><br><br>
 
   <button onclick="simpan()">💾 Simpan Catatan</button>
+      <hr>
+<div id="riwayat"></div>
     </div>
     <hr>
 <div id="hasil"></div>
@@ -57,17 +59,40 @@
     </p>
   </div>
 <script>
-  function simpan(){
-    const data = {
-      tanggal: document.getElementById('tanggal').value,
-      hst: document.getElementById('hst').value,
-      kegiatan: document.getElementById('kegiatan').value
-    };
+function simpan(){
+  function tampilkanData(){
+  const riwayat = document.getElementById('riwayat');
+  const data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
 
-    localStorage.setItem('jurnal_hari_ini', JSON.stringify(data));
-    tampilkan();
-    alert("Catatan tersimpan Alhamdulillah 🤲");
-  }
+  riwayat.innerHTML = "<h3>📖 Riwayat Catatan</h3>";
+
+  data.forEach((item, index) => {
+    riwayat.innerHTML += `
+      <div class="card">
+        <b>Hari ke-${index + 1}</b><br>
+        📅 Tanggal: ${item.tanggal}<br>
+        🌱 HST: ${item.hst}<br>
+        📝 Kegiatan: ${item.kegiatan}
+      </div>
+    `;
+  });
+}
+
+tampilkanData();
+  const dataBaru = {
+    tanggal: document.getElementById('tanggal').value,
+    hst: document.getElementById('hst').value,
+    kegiatan: document.getElementById('kegiatan').value
+  };
+
+  let dataLama = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
+  dataLama.push(dataBaru);
+
+  localStorage.setItem('jurnal_harian', JSON.stringify(dataLama));
+
+  tampilkanData();
+  alert("Catatan tersimpan Alhamdulillah 🤲");
+}
 
   function tampilkan(){
     const data = JSON.parse(localStorage.getItem('jurnal_hari_ini'));
