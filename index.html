@@ -1,172 +1,167 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Jurnal Harian Pertanian</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Jurnal Harian Pertanian</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body{
-      font-family: Arial, Helvetica, sans-serif;
-      margin:0;
-      background:#f4f7f4;
-    }
-    header{
-      background:#2f7d32;
-      color:#fff;
-      padding:14px;
-      text-align:center;
-    }
-    .card{
-      background:#fff;
-      margin:12px;
-      padding:12px;
-      border-radius:10px;
-      box-shadow:0 2px 6px rgba(0,0,0,.08);
-    }
-    input, textarea, select, button{
-      width:100%;
-      padding:8px;
-      margin-top:4px;
-      box-sizing:border-box;
-    }
-    button{
-      background:#2f7d32;
-      color:#fff;
-      border:none;
-      border-radius:6px;
-      font-size:15px;
-      margin-top:10px;
-    }
-  </style>
+<style>
+body{font-family:Arial;background:#f4f7f4;margin:0}
+header{background:#2f7d32;color:#fff;padding:14px;text-align:center}
+.card{background:#fff;margin:12px;padding:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+input,textarea,select,button{width:100%;padding:8px;margin-top:6px}
+button{background:#2f7d32;color:#fff;border:none;border-radius:6px}
+.item{border:1px dashed #ccc;padding:8px;margin-top:8px;border-radius:6px}
+.small{font-size:13px;color:#555}
+</style>
 </head>
 
 <body>
 <header>
-  <h2>🌾 Jurnal Harian Pertanian</h2>
-  <p>Catatan kegiatan & perawatan lahan</p>
+<h2>🌾 Jurnal Harian Pertanian</h2>
+<p>Catatan kegiatan, biaya, dan modal</p>
 </header>
 
+<!-- DATA AWAL -->
 <div class="card">
-  <b>📌 Data Awal Musim</b><br><br>
-  <label>Tanggal Mulai Olah Lahan (Hari ke-1)</label>
-  <input type="date" id="olahLahan">
-  <label>Tanggal Tanam</label>
-  <input type="date" id="tanggalTanam">
-  <button onclick="simpanDataAwal()">Simpan Data Awal</button>
+<b>📌 Data Awal Musim</b>
+<label>Tanggal Mulai Olah Lahan (Hari ke-1)</label>
+<input type="date" id="olahLahan">
+<label>Tanggal Tanam</label>
+<input type="date" id="tanggalTanam">
+<button onclick="simpanDataAwal()">Simpan Data Awal</button>
 </div>
 
+<!-- CATATAN KEGIATAN -->
 <div class="card">
-  <b>📓 Catatan Kegiatan</b><br><br>
-  <label>Tanggal Kegiatan</label>
-  <input type="date" id="tanggal">
-  <label>Kegiatan</label>
-  <textarea id="kegiatan" rows="4"></textarea>
-  <button onclick="simpan()">💾 Simpan Catatan</button>
+<b>📓 Catatan Kegiatan</b>
+<label>Tanggal</label>
+<input type="date" id="tanggalKegiatan">
+<label>Kegiatan</label>
+<textarea id="kegiatan"></textarea>
+<button onclick="simpanKegiatan()">💾 Simpan Kegiatan</button>
 </div>
 
+<!-- CATATAN BIAYA & MODAL -->
+<div class="card">
+<b>💰 Catatan Biaya & Modal</b>
+
+<label>Tanggal</label>
+<input type="date" id="tanggalBiaya">
+
+<label>Jenis</label>
+<select id="jenisBiaya" onchange="toggleBelanja()">
+<option value="Belanja">Belanja</option>
+<option value="Upah">Upah</option>
+<option value="Modal">Modal Masuk</option>
+</select>
+
+<div id="belanjaBox"></div>
+<button onclick="tambahItem()">➕ Tambah Item Belanja</button>
+
+<label>Keterangan (Upah / Modal)</label>
+<input type="text" id="keterangan">
+
+<label>Jumlah (Rp)</label>
+<input type="number" id="jumlah">
+
+<button onclick="simpanBiaya()">💾 Simpan</button>
+</div>
+
+<!-- RINGKASAN -->
+<div class="card" id="ringkasan"></div>
+
+<!-- RIWAYAT -->
 <div class="card" id="riwayat"></div>
 
-<div class="card">
-  <b>💰 Catatan Biaya & Upah</b><br><br>
-  <label>Tanggal</label>
-  <input type="date" id="tanggalBiaya">
-  <label>Jenis</label>
-  <select id="jenisBiaya">
-    <option value="Belanja">Belanja</option>
-    <option value="Upah">Upah</option>
-  </select>
-  <label>Keterangan</label>
-  <input type="text" id="keteranganBiaya">
-  <label>Jumlah (Rp)</label>
-  <input type="number" id="jumlahBiaya">
-  <button onclick="simpanBiaya()">💾 Simpan Biaya</button>
-</div>
-
-<div class="card" id="riwayatBiaya"></div>
-<div class="card" id="totalBiaya"></div>
-
 <script>
-// ================= DATA AWAL =================
+/* UTIL */
+function formatTanggal(t){
+  const hari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const d=new Date(t);
+  return hari[d.getDay()]+", "+d.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
+}
+
+/* DATA AWAL */
 function simpanDataAwal(){
-  const olah = document.getElementById('olahLahan').value;
-  const tanam = document.getElementById('tanggalTanam').value;
-  if(!olah || !tanam){ alert("Lengkapi data awal 🙏"); return; }
-  localStorage.setItem('olah_lahan', olah);
-  localStorage.setItem('tanggal_tanam', tanam);
-  alert("Data awal tersimpan 🌱");
+localStorage.setItem("olah",olahLahan.value);
+localStorage.setItem("tanam",tanggalTanam.value);
+alert("Data awal tersimpan");
+}
+olahLahan.value=localStorage.getItem("olah")||"";
+tanggalTanam.value=localStorage.getItem("tanam")||"";
+
+/* KEGIATAN */
+function simpanKegiatan(){
+let data=JSON.parse(localStorage.getItem("kegiatan"))||[];
+data.push({tanggal:tanggalKegiatan.value,teks:kegiatan.value});
+localStorage.setItem("kegiatan",JSON.stringify(data));
+tampil();
 }
 
-function hitungHari(t1, t2){
-  return Math.floor((new Date(t2) - new Date(t1)) / 86400000) + 1;
+/* BELANJA */
+function tambahItem(){
+belanjaBox.innerHTML+=`
+<div class="item">
+<input placeholder="Nama Barang">
+<input type="number" placeholder="Jumlah">
+<input type="number" placeholder="Harga Satuan">
+</div>`;
+}
+toggleBelanja();
+function toggleBelanja(){
+belanjaBox.style.display=jenisBiaya.value=="Belanja"?"block":"none";
 }
 
-// ================= KEGIATAN =================
-function simpan(){
-  const tanggal = document.getElementById('tanggal').value;
-  const kegiatan = document.getElementById('kegiatan').value;
-  const olah = localStorage.getItem('olah_lahan');
-  const tanam = localStorage.getItem('tanggal_tanam');
-  if(!olah || !tanam){ alert("Data awal belum ada"); return; }
-
-  const data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
-  data.push({
-    tanggal,
-    hariKe: hitungHari(olah, tanggal),
-    hst: hitungHari(tanam, tanggal) - 1,
-    kegiatan
-  });
-
-  localStorage.setItem('jurnal_harian', JSON.stringify(data));
-  tampilkanData();
-}
-
-function tampilkanData(){
-  const box = document.getElementById('riwayat');
-  const data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
-  data.sort((a,b)=>new Date(a.tanggal)-new Date(b.tanggal));
-  box.innerHTML = "<h3>📖 Riwayat Catatan</h3>";
-  data.forEach(d=>{
-    box.innerHTML += `<div class="card">
-      <b>Hari ke-${d.hariKe}</b><br>📅 ${d.tanggal}<br>🌱 HST: ${d.hst}<br>📝 ${d.kegiatan}
-    </div>`;
-  });
-}
-
-// ================= BIAYA =================
+/* SIMPAN BIAYA / MODAL */
 function simpanBiaya(){
-  const tanggal = document.getElementById('tanggalBiaya').value;
-  const jenis = document.getElementById('jenisBiaya').value;
-  const ket = document.getElementById('keteranganBiaya').value;
-  const jumlah = parseInt(document.getElementById('jumlahBiaya').value);
-  if(!tanggal || !ket || !jumlah){ alert("Lengkapi data biaya"); return; }
-
-  const data = JSON.parse(localStorage.getItem('jurnal_biaya')) || [];
-  data.push({tanggal, jenis, ket, jumlah});
-  localStorage.setItem('jurnal_biaya', JSON.stringify(data));
-  tampilkanBiaya();
+let data=JSON.parse(localStorage.getItem("biaya"))||[];
+let jenis=jenisBiaya.value;
+let total=0,items=[];
+if(jenis=="Belanja"){
+document.querySelectorAll(".item").forEach(i=>{
+let n=i.children[0].value;
+let q=+i.children[1].value;
+let h=+i.children[2].value;
+if(n&&q&&h){items.push({n,q,h});total+=q*h;}
+});
+}else{
+total=+jumlah.value;
+}
+data.push({tanggal:tanggalBiaya.value,jenis,keterangan:keterangan.value,total,items});
+localStorage.setItem("biaya",JSON.stringify(data));
+tampil();
 }
 
-function tampilkanBiaya(){
-  const box = document.getElementById('riwayatBiaya');
-  const totalBox = document.getElementById('totalBiaya');
-  const data = JSON.parse(localStorage.getItem('jurnal_biaya')) || [];
-  data.sort((a,b)=>new Date(a.tanggal)-new Date(b.tanggal));
+/* TAMPILKAN */
+function tampil(){
+let keg=JSON.parse(localStorage.getItem("kegiatan"))||[];
+let bio=JSON.parse(localStorage.getItem("biaya"))||[];
+let gabung=[...keg.map(k=>({...k,tipe:"kegiatan"})),...bio.map(b=>({...b,tipe:"biaya"}))];
+gabung.sort((a,b)=>new Date(a.tanggal)-new Date(b.tanggal));
 
-  let total = 0;
-  box.innerHTML = "<h3>📒 Riwayat Biaya</h3>";
-  data.forEach(d=>{
-    total += d.jumlah;
-    box.innerHTML += `<div class="card">
-      📅 ${d.tanggal}<br>💼 ${d.jenis}<br>📝 ${d.ket}<br>💰 Rp ${d.jumlah.toLocaleString()}
-    </div>`;
-  });
-  totalBox.innerHTML = `<h3>📊 Total Modal</h3><h2>Rp ${total.toLocaleString()}</h2>`;
+let modal=0,keluar=0;
+riwayat.innerHTML="<h3>📖 Riwayat</h3>";
+gabung.forEach(x=>{
+if(x.tipe=="biaya"){
+if(x.jenis=="Modal") modal+=x.total;
+else keluar+=x.total;
 }
-
-tampilkanData();
-tampilkanBiaya();
+riwayat.innerHTML+=`
+<div class="card">
+<b>${formatTanggal(x.tanggal)}</b><br>
+${x.teks||""}
+${x.items?x.items.map(i=>`<div class="small">${i.n} ${i.q} x Rp${i.h}</div>`).join(""):""}
+${x.total?"<b>Rp "+x.total.toLocaleString()+"</b>":""}
+</div>`;
+});
+ringkasan.innerHTML=`
+<b>📊 Ringkasan Modal</b><br>
+Modal Masuk: Rp ${modal.toLocaleString()}<br>
+Total Biaya: Rp ${keluar.toLocaleString()}<br>
+<b>Sisa Modal: Rp ${(modal-keluar).toLocaleString()}</b>`;
+}
+tampil();
 </script>
-
 </body>
 </html>
