@@ -35,10 +35,35 @@
 
   <div class="card">
     <b>Selamat datang</b>
+    <div class="card">
+  <b>📓 Catatan Hari Ini</b><br><br>
+
+  <label>Tanggal</label><br>
+  <input type="date" id="tanggal"><br><br>
+
+  <label>Umur Tanaman (HST)</label><br>
+  <input type="number" id="hst" placeholder="contoh: 35"><br><br>
+
+  <label>Kegiatan</label><br>
+  <textarea id="kegiatan" rows="4" placeholder="Contoh: penyemprotan, pemupukan..."></textarea><br><br>
+
+  <button onclick="simpan()">💾 Simpan Catatan</button>
+    </div>
     <p>
       Ini adalah jurnal pertanian online milik Pak Teguh Subekti.
       <br>InsyaAllah akan dikembangkan bertahap.
     </p>
   </div>
+  <script>
+  function simpan(){
+    const data = {
+      tanggal: document.getElementById('tanggal').value,
+      hst: document.getElementById('hst').value,
+      kegiatan: document.getElementById('kegiatan').value
+    };
+    localStorage.setItem('jurnal_hari_ini', JSON.stringify(data));
+    alert("Catatan tersimpan Alhamdulillah 🤲");
+  }
+  </script>
 </body>
 </html>
