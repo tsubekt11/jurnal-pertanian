@@ -17,17 +17,6 @@ header{background:#2f7d32;color:#fff;padding:14px;text-align:center}
   border-radius:10px;
   box-shadow:0 2px 6px rgba(0,0,0,.1)
 }
-.tgl-kanan{
-  width:160px;
-  text-align:right;
-}
-
-.tgl-info{
-  flex:1;
-  font-size:18px;
-  font-weight:bold;
-  align-self:center;
-}
 
 input,textarea,select,button{
   width:100%;
@@ -43,12 +32,27 @@ button{
   margin-top:10px
 }
 
-.small{font-size:13px;color:#555;margin-top:4px}
-
 .row{
   display:flex;
-  gap:6px;
-  margin-top:6px
+  gap:10px;
+  margin-top:6px;
+  align-items:center;
+}
+
+.tgl-kanan{
+  width:160px;
+  text-align:right;
+}
+
+.tgl-info{
+  flex:1;
+  font-size:18px;
+  font-weight:bold;
+}
+
+.card b{
+  display:block;
+  margin-bottom:4px;
 }
 
 .no{width:40px;text-align:center}
@@ -67,8 +71,9 @@ hr{margin:10px 0}
 <p>Catatan kegiatan, biaya, dan modal</p>
 </header>
 
+<!-- DATA AWAL MUSIM -->
 <div class="card">
-<b>📌 Data Awal Musim</b><br><br>
+<b>📌 Data Awal Musim</b><br>
 
 <b>Tanggal Mulai Olah Lahan (Hari ke-1)</b>
 <div class="row">
@@ -85,6 +90,7 @@ hr{margin:10px 0}
 <button onclick="simpanAwal()">Simpan Data Awal</button>
 </div>
 
+<!-- CATATAN KEGIATAN -->
 <div class="card">
 <b>📓 Catatan Kegiatan</b>
 
@@ -97,6 +103,7 @@ hr{margin:10px 0}
 <button onclick="simpanKegiatan()">💾 Simpan Kegiatan</button>
 </div>
 
+<!-- BIAYA & MODAL -->
 <div class="card">
 <b>💰 Catatan Biaya & Modal</b>
 
@@ -105,9 +112,9 @@ hr{margin:10px 0}
 
 <b>Jenis</b>
 <select id="jenis" onchange="toggleBelanja()">
-<option>Belanja</option>
-<option>Upah</option>
-<option>Modal</option>
+  <option>Belanja</option>
+  <option>Upah</option>
+  <option>Modal</option>
 </select>
 
 <div id="belanjaBox"></div>
@@ -139,6 +146,7 @@ function simpanAwal(){
   localStorage.setItem("olah",olah.value);
   localStorage.setItem("tanam",tanam.value);
   tampilHari();
+  alert("Data awal tersimpan Alhamdulillah 🤲");
 }
 
 function tampilHari(){
