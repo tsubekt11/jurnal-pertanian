@@ -24,18 +24,19 @@
       border-radius:10px;
       box-shadow:0 2px 6px rgba(0,0,0,.08);
     }
-    button{
-      padding:10px;
-      border:none;
-      border-radius:6px;
-      background:#2f7d32;
-      color:#fff;
-      font-size:15px;
-    }
-    input, textarea{
+    input, textarea, button{
       width:100%;
       padding:8px;
+      margin-top:4px;
       box-sizing:border-box;
+    }
+    button{
+      background:#2f7d32;
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      font-size:15px;
+      margin-top:10px;
     }
   </style>
 </head>
@@ -47,18 +48,26 @@
 </header>
 
 <div class="card">
-  <b>📓 Catatan Hari Ini</b><br><br>
+  <b>📌 Data Awal Musim</b><br><br>
 
-  <label>📌 Tanggal Tanam</label><br>
-  <input type="date" id="tanggalTanam"><br><br>
-  <button onclick="simpanTanggalTanam()">Simpan Tanggal Tanam</button><br><br>
+  <label>Tanggal Mulai Olah Lahan (Hari ke-1)</label>
+  <input type="date" id="olahLahan">
 
-  <label>📅 Tanggal Kegiatan</label><br>
-  <input type="date" id="tanggal"><br><br>
+  <label>Tanggal Tanam</label>
+  <input type="date" id="tanggalTanam">
 
-  <label>📝 Kegiatan</label><br>
+  <button onclick="simpanDataAwal()">Simpan Data Awal</button>
+</div>
+
+<div class="card">
+  <b>📓 Catatan Kegiatan</b><br><br>
+
+  <label>Tanggal Kegiatan</label>
+  <input type="date" id="tanggal">
+
+  <label>Kegiatan</label>
   <textarea id="kegiatan" rows="4"
-    placeholder="Contoh: penyemprotan, pemupukan, penyiangan"></textarea><br><br>
+    placeholder="Contoh: olah tanah, pemupukan, penyemprotan"></textarea>
 
   <button onclick="simpan()">💾 Simpan Catatan</button>
 </div>
@@ -66,63 +75,74 @@
 <div class="card" id="riwayat"></div>
 
 <script>
-// simpan tanggal tanam
-function simpanTanggalTanam(){
-  const t = document.getElementById('tanggalTanam').value;
-  if(!t){
-    alert("Silakan pilih tanggal tanam 🙏");
+// simpan data awal
+function simpanDataAwal(){
+  const olah = document.getElementById('olahLahan').value;
+  const tanam = document.getElementById('tanggalTanam').value;
+
+  if(!olah || !tanam){
+    alert("Lengkapi tanggal olah lahan dan tanggal tanam 🙏");
     return;
   }
-  localStorage.setItem('tanggal_tanam', t);
-  alert("Tanggal tanam tersimpan Alhamdulillah 🌱");
+
+  localStorage.setItem('olah_lahan', olah);
+  localStorage.setItem('tanggal_tanam', tanam);
+
+  alert("Data awal tersimpan Alhamdulillah 🌱");
 }
 
-// hitung HST
-function hitungHST(tanggalTanam, tanggalKegiatan){
-  const t1 = new Date(tanggalTanam);
-  const t2 = new Date(tanggalKegiatan);
-  const selisih = t2 - t1;
-  return Math.floor(selisih / (1000 * 60 * 60 * 24));
+// hitung selisih hari
+function hitungHari(tanggalAwal, tanggalAkhir){
+  const t1 = new Date(tanggalAwal);
+  const t2 = new Date(tanggalAkhir);
+  return Math.floor((t2 - t1) / (1000 * 60 * 60 * 24)) + 1;
 }
 
 // simpan catatan
 function simpan(){
   const tanggal = document.getElementById('tanggal').value;
   const kegiatan = document.getElementById('kegiatan').value;
+
+  const olahLahan = localStorage.getItem('olah_lahan');
   const tanggalTanam = localStorage.getItem('tanggal_tanam');
 
-  if(!tanggalTanam){
-    alert("Tanggal tanam belum disimpan 🙏");
+  if(!olahLahan || !tanggalTanam){
+    alert("Data awal belum disimpan 🙏");
     return;
   }
 
-  const hst = hitungHST(tanggalTanam, tanggal);
+  const hariKe = hitungHari(olahLahan, tanggal);
+  const hst = hitungHari(tanggalTanam, tanggal) - 1;
 
   const dataBaru = {
     tanggal,
+    hariKe,
     hst,
     kegiatan
   };
 
   let data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
   data.push(dataBaru);
-  localStorage.setItem('jurnal_harian', JSON.stringify(data));
 
+  localStorage.setItem('jurnal_harian', JSON.stringify(data));
   tampilkanData();
+
   alert("Catatan tersimpan Alhamdulillah 🤲");
 }
 
-// tampilkan riwayat
+// tampilkan riwayat terurut tanggal
 function tampilkanData(){
   const riwayat = document.getElementById('riwayat');
-  const data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
+  let data = JSON.parse(localStorage.getItem('jurnal_harian')) || [];
+
+  data.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
 
   riwayat.innerHTML = "<h3>📖 Riwayat Catatan</h3>";
 
-  data.forEach((item, i) => {
+  data.forEach(item => {
     riwayat.innerHTML += `
       <div class="card">
-        <b>Hari ke-${i+1}</b><br>
+        <b>Hari ke-${item.hariKe}</b><br>
         📅 ${item.tanggal}<br>
         🌱 HST: ${item.hst}<br>
         📝 ${item.kegiatan}
