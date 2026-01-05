@@ -295,9 +295,20 @@ function tampilRiwayat(){
 }
 
 /* INIT */
-tampilHeader();
+const dataAwalTersimpan = JSON.parse(localStorage.getItem("dataAwal"));
+
+if(dataAwalTersimpan){
+  tampilHeader();
+  dataAwalCard.classList.add("hidden");   // ⬅️ INI KUNCI UTAMA
+  btnEditAwal.classList.remove("hidden");
+}else{
+  dataAwalCard.classList.remove("hidden");
+  btnEditAwal.classList.add("hidden");
+}
+
 tampilRiwayat();
 ubahJenis();
+
 </script>
 
 </body>
