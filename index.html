@@ -37,9 +37,7 @@ button{
 hr{margin:12px 0}
 
 .row{display:flex;gap:6px;margin-top:6px}
-.no{width:36px;text-align:center}
-.nama{flex:1}
-.qty{width:60px;text-align:center}
+.qty{width:70px}
 .harga{width:120px}
 .total{width:120px;background:#f0f0f0}
 </style>
@@ -58,7 +56,7 @@ hr{margin:12px 0}
 <input type="date" id="tanggalHarian">
 </div>
 
-<!-- ================= CATATAN KEGIATAN ================= -->
+<!-- ================= KEGIATAN ================= -->
 <div class="card">
 <b>📓 Catatan Kegiatan</b>
 <textarea id="kegiatan" placeholder="Tuliskan kegiatan hari ini..."></textarea>
@@ -75,11 +73,11 @@ hr{margin:12px 0}
   <option value="Modal">Modal</option>
 </select>
 
-<!-- ===== BELANJA DETAIL ===== -->
+<!-- ===== BELANJA ===== -->
 <div id="belanjaBox" class="hidden"></div>
 <button id="btnTambah" onclick="tambahItem()" class="hidden">➕ Tambah Item Belanja</button>
 
-<!-- ===== UPah / MODAL ===== -->
+<!-- ===== NON BELANJA ===== -->
 <div id="nonBelanjaBox">
   <b>Keterangan</b>
   <input id="ket">
@@ -100,6 +98,23 @@ hr{margin:12px 0}
 <script>
 let itemsBelanja=[];
 
+/* ================= HEADER ================= */
+function loadHeader(){
+  const d=JSON.parse(localStorage.getItem("dataAwal"));
+  if(!d){
+    headerInfo.innerHTML="<small>Data awal musim belum diisi</small>";
+    return;
+  }
+  headerInfo.innerHTML=`
+    <b>${d.komoditi}</b> — ${d.jumlah} batang | ${d.luas} Ha<br>
+    Desa ${d.desa}<br>
+    🌱 Olah: ${d.olah}<br>
+    🌾 Tanam: ${d.tanam}<br>
+    📍 <a href="${d.lokasi}" target="_blank" style="color:#fff">Lihat Lokasi</a>
+  `;
+}
+
+/* ================= BELANJA ================= */
 function toggleBelanja(){
   const isBelanja = jenis.value==="Belanja";
   belanjaBox.classList.toggle("hidden",!isBelanja);
@@ -121,22 +136,26 @@ function renderBelanja(){
     const sub=it.qty*it.harga;
     total+=sub;
     belanjaBox.innerHTML+=`
-      <div class="row">
-        <input class="no" value="${i+1}" disabled>
-        <input class="nama" placeholder="Nama Barang"
-          value="${it.nama}"
-          oninput="itemsBelanja[${i}].nama=this.value">
-        <input class="qty" type="number" value="${it.qty}"
-          oninput="itemsBelanja[${i}].qty=this.value;renderBelanja()">
-        <input class="harga" type="number" value="${it.harga}"
-          oninput="itemsBelanja[${i}].harga=this.value;renderBelanja()">
-        <input class="total" value="${sub.toLocaleString()}" disabled>
+      <div style="margin-top:8px">
+        <b>${i+1}. <input placeholder="Nama Barang" value="${it.nama}"
+        oninput="itemsBelanja[${i}].nama=this.value"></b>
+
+        <div class="row">
+          <input class="qty" type="number" value="${it.qty}"
+            oninput="itemsBelanja[${i}].qty=this.value;renderBelanja()"
+            placeholder="Qty">
+          <input class="harga" type="number" value="${it.harga}"
+            oninput="itemsBelanja[${i}].harga=this.value;renderBelanja()"
+            placeholder="Harga">
+          <input class="total" value="${sub.toLocaleString()}" disabled>
+        </div>
       </div>`;
   });
 
   belanjaBox.innerHTML+=`<hr><b>Grand Total: Rp ${total.toLocaleString()}</b>`;
 }
 
+/* ================= SIMPAN ================= */
 function simpanKegiatan(){
   if(!tanggalHarian.value) return alert("Pilih tanggal dulu");
   const data=JSON.parse(localStorage.getItem("kegiatan"))||[];
@@ -163,6 +182,7 @@ function simpanBiaya(){
   tampil();
 }
 
+/* ================= RIWAYAT & RINGKASAN ================= */
 function tampil(){
   const k=JSON.parse(localStorage.getItem("kegiatan"))||[];
   const b=JSON.parse(localStorage.getItem("biaya"))||[];
@@ -176,10 +196,10 @@ function tampil(){
 
     riwayat.innerHTML+=`
       <div>
-      <b>${x.tanggal}</b><br>
-      ${x.jenis}<br>
-      ${x.items?x.items.map((i,n)=>`${n+1}. ${i.nama} ${i.qty} x ${i.harga}`).join("<br>"):""}
-      <br><b>Rp ${x.total.toLocaleString()}</b>
+        <b>${x.tanggal}</b><br>
+        ${x.jenis}<br>
+        ${x.items?x.items.map((i,n)=>`${n+1}. ${i.nama} — ${i.qty} x ${i.harga}`).join("<br>"):""}
+        <br><b>Rp ${x.total.toLocaleString()}</b>
       </div><hr>`;
   });
 
@@ -191,6 +211,7 @@ function tampil(){
 }
 
 toggleBelanja();
+loadHeader();
 tampil();
 </script>
 
