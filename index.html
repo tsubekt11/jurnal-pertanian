@@ -37,6 +37,12 @@ button{
 .tgl-kanan{width:160px}
 .tgl-info{flex:1;font-size:18px;font-weight:bold}
 
+.sub-tanggal{
+  font-size:14px;
+  color:#555;
+  margin-top:2px;
+}
+
 .item-belanja{
   border:1px solid #ddd;
   border-radius:6px;
@@ -48,6 +54,14 @@ button{
   margin-top:4px;
   padding-left:6px;
   border-left:3px solid #2f7d32
+}
+
+.biaya-harian{
+  margin-top:6px;
+  padding:6px;
+  background:#f1f8f4;
+  border-left:4px solid #2f7d32;
+  font-weight:bold;
 }
 
 hr{margin:10px 0}
@@ -118,8 +132,11 @@ hr{margin:10px 0}
 <button onclick="simpanBiaya()">💾 Simpan</button>
 </div>
 
-<div class="card" id="ringkasan"></div>
+<!-- RIWAYAT -->
 <div class="card" id="riwayat"></div>
+
+<!-- RINGKASAN -->
+<div class="card" id="ringkasan"></div>
 
 <script>
 let itemsBelanja=[];
@@ -128,6 +145,13 @@ function formatHari(t){
   return new Date(t).toLocaleDateString("id-ID",{
     weekday:"long",day:"numeric",month:"long",year:"numeric"
   });
+}
+
+function hitungSelisih(tglAwal, tgl){
+  if(!tglAwal) return null;
+  const a = new Date(tglAwal);
+  const b = new Date(tgl);
+  return Math.floor((b - a) / 86400000) + 1;
 }
 
 /* DATA AWAL */
@@ -212,13 +236,13 @@ function simpanKegiatan(){
   tampil();
 }
 
-/* RIWAYAT TERKELOMPOK */
+/* RIWAYAT + BIAYA HARIAN */
 function tampil(){
   const keg = JSON.parse(localStorage.getItem("kegiatan")) || [];
   const bio = JSON.parse(localStorage.getItem("biaya")) || [];
 
   let grup = {};
-  let modal=0, keluar=0;
+  let modal=0, totalKeluar=0;
 
   keg.forEach(k=>{
     if(!grup[k.tanggal]) grup[k.tanggal]=[];
@@ -235,7 +259,19 @@ function tampil(){
   riwayat.innerHTML="<h3>📖 Riwayat</h3>";
 
   urut.forEach(tgl=>{
-    riwayat.innerHTML+=`<div class="card"><b>${formatHari(tgl)}</b>`;
+    const hariKe = hitungSelisih(localStorage.getItem("olah"), tgl);
+    const hst = hitungSelisih(localStorage.getItem("tanam"), tgl);
+
+    let belanjaHari = 0;
+    let upahHari = 0;
+
+    riwayat.innerHTML+=`
+      <div class="card">
+        <b>${formatHari(tgl)}</b>
+        <div class="sub-tanggal">
+          ${hariKe?`Hari ke-${hariKe}`:""} ${hst?` | HST ${hst}`:""}
+        </div>
+    `;
 
     grup[tgl].forEach(x=>{
       if(x.tipe==="kegiatan"){
@@ -248,6 +284,8 @@ function tampil(){
     if(belanja.length){
       riwayat.innerHTML+=`<hr><b>🧾 Belanja</b>`;
       belanja.forEach(b=>{
+        belanjaHari += b.data.total;
+        totalKeluar += b.data.total;
         b.data.items.forEach((i,n)=>{
           riwayat.innerHTML+=`
             <div class="riwayat-item">
@@ -259,7 +297,6 @@ function tampil(){
           <div class="riwayat-item">
             <b>Total Belanja: Rp ${b.data.total.toLocaleString()}</b>
           </div>`;
-        keluar+=b.data.total;
       });
     }
 
@@ -267,25 +304,33 @@ function tampil(){
     if(upah.length){
       riwayat.innerHTML+=`<hr><b>👷 Upah</b>`;
       upah.forEach(u=>{
+        upahHari += u.data.total;
+        totalKeluar += u.data.total;
         riwayat.innerHTML+=`
           <div class="riwayat-item">
             ${u.data.ket}<br>
             <b>Rp ${u.data.total.toLocaleString()}</b>
           </div>`;
-        keluar+=u.data.total;
       });
+    }
+
+    if(belanjaHari + upahHari > 0){
+      riwayat.innerHTML+=`
+        <div class="biaya-harian">
+          📊 Biaya Harian: Rp ${(belanjaHari + upahHari).toLocaleString()}
+        </div>`;
     }
 
     const modalMasuk = grup[tgl].filter(x=>x.data.jenis==="Modal");
     if(modalMasuk.length){
       riwayat.innerHTML+=`<hr><b>💵 Modal Masuk</b>`;
       modalMasuk.forEach(m=>{
+        modal += m.data.total;
         riwayat.innerHTML+=`
           <div class="riwayat-item">
             ${m.data.ket}<br>
             <b>Rp ${m.data.total.toLocaleString()}</b>
           </div>`;
-        modal+=m.data.total;
       });
     }
 
@@ -293,14 +338,13 @@ function tampil(){
   });
 
   ringkasan.innerHTML=`
-    <b>📊 Ringkasan</b><br>
+    <h3>📊 Ringkasan Akhir</h3>
     Modal Masuk: Rp ${modal.toLocaleString()}<br>
-    Total Biaya: Rp ${keluar.toLocaleString()}<br>
-    <b>Sisa Modal: Rp ${(modal-keluar).toLocaleString()}</b>`;
+    Total Biaya: Rp ${totalKeluar.toLocaleString()}<br>
+    <b>Sisa Modal: Rp ${(modal-totalKeluar).toLocaleString()}</b>`;
 }
 
 tampil();
 </script>
 </body>
 </html>
-
