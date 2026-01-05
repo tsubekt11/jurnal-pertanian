@@ -83,7 +83,7 @@ button{
   <button onclick="simpanAwal()">💾 Simpan Data Awal</button>
 </div>
 
-<!-- CATATAN TANGGAL -->
+<!-- TANGGAL CATATAN -->
 <div class="card">
   <h3>📅 Tanggal Catatan</h3>
   <input type="date" id="tanggalCatatan">
@@ -111,7 +111,7 @@ button{
   <input id="ket">
 
   <label>Jumlah (Rp)</label>
-  <input id="jumlahUang">
+  <input id="jumlahUang" type="number">
 
   <button onclick="simpanBiaya()">💾 Simpan</button>
 </div>
@@ -122,6 +122,7 @@ button{
 <script>
 /* ================= UTIL ================= */
 function formatHari(t){
+  if(!t) return "-";
   return new Date(t).toLocaleDateString("id-ID",{
     weekday:"long",day:"numeric",month:"long",year:"numeric"
   });
@@ -144,7 +145,19 @@ function simpanAwal(){
   btnEditAwal.classList.remove("hidden");
 }
 
+/* 👉 INI BAGIAN PENTING (EDIT TANPA HAPUS DATA) */
 function editAwal(){
+  const a=JSON.parse(localStorage.getItem("awal"));
+  if(!a) return;
+
+  komoditi.value = a.komoditi || "";
+  jumlah.value   = a.jumlah   || "";
+  luas.value     = a.luas     || "";
+  desa.value     = a.desa     || "";
+  lokasi.value   = a.lokasi   || "";
+  olah.value     = a.olah     || "";
+  tanam.value    = a.tanam    || "";
+
   dataAwalBox.classList.remove("hidden");
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -217,9 +230,9 @@ function tampilRiwayat(){
 
 /* ================= INIT ================= */
 if(localStorage.getItem("awal")){
+  tampilHeader();
   dataAwalBox.classList.add("hidden");
   btnEditAwal.classList.remove("hidden");
-  tampilHeader();
 }
 tampilRiwayat();
 </script>
