@@ -18,23 +18,10 @@ header{
 }
 header *{color:#ffffff !important}
 
-.header-line{
-  margin:4px 0;
-  font-size:14px;
-}
-.header-main{
-  font-size:16px;
-  font-weight:bold;
-  margin-top:6px;
-}
-.header-sub{
-  font-size:14px;
-}
-.header-link a{
-  color:#ffffff;
-  text-decoration:underline;
-  font-weight:bold;
-}
+.header-main{font-size:16px;font-weight:bold;margin-top:6px}
+.header-sub{font-size:14px}
+.header-line{margin:4px 0;font-size:14px}
+.header-link a{color:#ffffff;text-decoration:underline;font-weight:bold}
 
 #btnEditAwal{
   margin-top:10px;
@@ -57,7 +44,7 @@ header *{color:#ffffff !important}
 .hidden{display:none}
 
 label{font-weight:bold;margin-top:8px;display:block}
-input,textarea,select,button{
+input,select,button{
   width:100%;
   padding:8px;
   margin-top:4px
@@ -101,6 +88,24 @@ button{
   <label>Nama Desa</label>
   <input id="desa">
 
+  <label>Nama Pemilik Lahan</label>
+  <input id="pemilik">
+
+  <label>Status Lahan</label>
+  <select id="statusLahan" onchange="toggleSewa()">
+    <option value="Hak Milik">Hak Milik</option>
+    <option value="Sewa">Sewa</option>
+  </select>
+
+  <!-- KHUSUS SEWA -->
+  <div id="sewaBox" class="hidden">
+    <label>Tanggal Mulai Sewa</label>
+    <input type="date" id="sewaMulai">
+
+    <label>Tanggal Akhir Sewa</label>
+    <input type="date" id="sewaAkhir">
+  </div>
+
   <label>Lokasi Lahan (Link Google Maps)</label>
   <input id="lokasi">
 
@@ -122,6 +127,11 @@ function formatTanggal(t){
   });
 }
 
+/* ===== TOGGLE SEWA ===== */
+function toggleSewa(){
+  sewaBox.classList.toggle("hidden", statusLahan.value!=="Sewa");
+}
+
 /* ===== DATA AWAL ===== */
 function simpanDataAwal(){
   const data={
@@ -129,6 +139,10 @@ function simpanDataAwal(){
     jumlah:jumlahTanaman.value,
     luas:luasLahan.value,
     desa:desa.value,
+    pemilik:pemilik.value,
+    status:statusLahan.value,
+    sewaMulai:sewaMulai.value,
+    sewaAkhir:sewaAkhir.value,
     lokasi:lokasi.value,
     olah:olah.value,
     tanam:tanam.value
@@ -147,10 +161,15 @@ function editAwal(){
   jumlahTanaman.value=d.jumlah||"";
   luasLahan.value=d.luas||"";
   desa.value=d.desa||"";
+  pemilik.value=d.pemilik||"";
+  statusLahan.value=d.status||"Hak Milik";
+  sewaMulai.value=d.sewaMulai||"";
+  sewaAkhir.value=d.sewaAkhir||"";
   lokasi.value=d.lokasi||"";
   olah.value=d.olah||"";
   tanam.value=d.tanam||"";
 
+  toggleSewa();
   dataAwalCard.classList.remove("hidden");
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -159,10 +178,22 @@ function tampilHeader(){
   const d=JSON.parse(localStorage.getItem("dataAwal"));
   if(!d) return;
 
+  let sewaInfo = "";
+  if(d.status==="Sewa"){
+    sewaInfo = `
+      <div class="header-line">
+        Status: Sewa (${formatTanggal(d.sewaMulai)} – ${formatTanggal(d.sewaAkhir)})
+      </div>`;
+  }else{
+    sewaInfo = `<div class="header-line">Status: Hak Milik</div>`;
+  }
+
   headerInfo.innerHTML=`
     <div class="header-main">${d.komoditi}</div>
     <div class="header-sub">${d.jumlah} batang | ${d.luas} Ha</div>
     <div class="header-line">Desa ${d.desa}</div>
+    <div class="header-line">Pemilik Lahan: ${d.pemilik}</div>
+    ${sewaInfo}
     <div class="header-line">🌱 Olah Lahan: ${formatTanggal(d.olah)}</div>
     <div class="header-line">🌾 Tanam: ${formatTanggal(d.tanam)}</div>
     <div class="header-link">📍 <a href="${d.lokasi}" target="_blank">Lihat Lokasi</a></div>
@@ -179,6 +210,7 @@ if(dataAwalTersimpan){
   dataAwalCard.classList.remove("hidden");
   btnEditAwal.classList.add("hidden");
 }
+toggleSewa();
 </script>
 
 </body>
