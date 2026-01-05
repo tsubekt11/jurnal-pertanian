@@ -35,16 +35,12 @@ button{
 
 .hidden{display:none}
 hr{margin:12px 0}
-.row{display:flex;gap:8px;align-items:center}
-.tgl-kanan{width:160px;text-align:right}
-.tgl-info{flex:1;font-size:18px;font-weight:bold}
-.small{font-size:13px;color:#555}
 
-.belanja{
-  border-left:4px solid #2f7d32;
-  padding-left:8px;
-  margin-top:6px
-}
+.row{display:flex;gap:8px;align-items:center}
+.tgl-kanan{width:160px}
+.tgl-info{flex:1;font-size:18px;font-weight:bold}
+
+.small{font-size:13px;color:#555}
 </style>
 </head>
 
@@ -91,16 +87,16 @@ hr{margin:12px 0}
 <button onclick="simpanAwal()">Simpan Data Awal</button>
 </div>
 
+<!-- ================= TANGGAL HARIAN ================= -->
+<div class="card">
+<b>📅 Tanggal Catatan</b>
+<input type="date" id="tanggalHarian">
+</div>
+
 <!-- ================= CATATAN KEGIATAN ================= -->
 <div class="card">
 <b>📓 Catatan Kegiatan</b>
-
-<b>Tanggal</b>
-<input type="date" id="tglKegiatan">
-
-<b>Kegiatan</b>
-<textarea id="kegiatan"></textarea>
-
+<textarea id="kegiatan" placeholder="Tuliskan kegiatan hari ini..."></textarea>
 <button onclick="simpanKegiatan()">💾 Simpan Kegiatan</button>
 </div>
 
@@ -108,14 +104,11 @@ hr{margin:12px 0}
 <div class="card">
 <b>💰 Catatan Biaya & Modal</b>
 
-<b>Tanggal</b>
-<input type="date" id="tglBiaya">
-
 <b>Jenis</b>
 <select id="jenis">
-<option>Belanja</option>
-<option>Upah</option>
-<option>Modal</option>
+  <option>Belanja</option>
+  <option>Upah</option>
+  <option>Modal</option>
 </select>
 
 <b>Keterangan</b>
@@ -135,9 +128,12 @@ hr{margin:12px 0}
 
 <script>
 function fmt(t){
-  return new Date(t).toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  return new Date(t).toLocaleDateString("id-ID",{
+    weekday:"long",day:"numeric",month:"long",year:"numeric"
+  });
 }
 
+/* ===== DATA AWAL ===== */
 function simpanAwal(){
   const d={
     komoditi:komoditi.value,
@@ -172,36 +168,63 @@ function ubahAwal(){
   headerInfo.innerHTML="";
 }
 
+/* ===== KEGIATAN ===== */
 function simpanKegiatan(){
-  const a=JSON.parse(localStorage.getItem("data_awal"));
+  const tanggal = tanggalHarian.value;
+  if(!tanggal){ alert("Pilih tanggal dulu 🙏"); return; }
+
+  const awal=JSON.parse(localStorage.getItem("data_awal"));
+  const t=new Date(tanggal);
+
+  const hariKe=Math.floor((t-new Date(awal.olah))/86400000)+1;
+  const hst=Math.floor((t-new Date(awal.tanam))/86400000);
+
   const data=JSON.parse(localStorage.getItem("kegiatan"))||[];
-  const t=new Date(tglKegiatan.value);
-  const hariKe=Math.floor((t-new Date(a.olah))/86400000)+1;
-  const hst=Math.floor((t-new Date(a.tanam))/86400000);
-  data.push({tanggal:tglKegiatan.value,teks:kegiatan.value,hariKe,hst});
+  data.push({tanggal,teks:kegiatan.value,hariKe,hst});
   localStorage.setItem("kegiatan",JSON.stringify(data));
   tampil();
 }
 
+/* ===== BIAYA ===== */
 function simpanBiaya(){
+  const tanggal = tanggalHarian.value;
+  if(!tanggal){ alert("Pilih tanggal dulu 🙏"); return; }
+
   const data=JSON.parse(localStorage.getItem("biaya"))||[];
-  data.push({tanggal:tglBiaya.value,jenis:jenis.value,ket:ket.value,total:+jumlah.value});
+  data.push({
+    tanggal,
+    jenis:jenis.value,
+    ket:ket.value,
+    total:+jumlah.value
+  });
   localStorage.setItem("biaya",JSON.stringify(data));
   tampil();
 }
 
+/* ===== RIWAYAT ===== */
 function tampil(){
   const k=JSON.parse(localStorage.getItem("kegiatan"))||[];
   const b=JSON.parse(localStorage.getItem("biaya"))||[];
   riwayat.innerHTML="<b>📖 Riwayat</b><br><br>";
+
   let modal=0,keluar=0;
 
   [...k,...b].sort((a,b)=>a.tanggal.localeCompare(b.tanggal)).forEach(x=>{
-    if(x.hariKe){
-      riwayat.innerHTML+=`📘 ${fmt(x.tanggal)} — Hari ${x.hariKe} | HST ${x.hst}<br>${x.teks}<hr>`;
+    if(x.hariKe!==undefined){
+      riwayat.innerHTML+=`
+        <div>
+        📘 <b>${fmt(x.tanggal)}</b><br>
+        Hari ke-${x.hariKe} | HST ${x.hst}<br>
+        ${x.teks}
+        </div><hr>`;
     }else{
-      riwayat.innerHTML+=`💰 ${fmt(x.tanggal)} — ${x.jenis}: Rp ${x.total.toLocaleString()}<hr>`;
-      if(x.jenis=="Modal") modal+=x.total; else keluar+=x.total;
+      riwayat.innerHTML+=`
+        <div>
+        💰 <b>${fmt(x.tanggal)}</b><br>
+        ${x.jenis} — Rp ${x.total.toLocaleString()}
+        </div><hr>`;
+      if(x.jenis=="Modal") modal+=x.total;
+      else keluar+=x.total;
     }
   });
 
