@@ -21,7 +21,12 @@ header *{color:#ffffff !important}
 .header-main{font-size:16px;font-weight:bold;margin-top:6px}
 .header-sub{font-size:14px}
 .header-line{margin:4px 0;font-size:14px}
-.header-link a{color:#ffffff;text-decoration:underline;font-weight:bold}
+.header-group{margin:6px 0}
+.header-link a{
+  color:#ffffff;
+  text-decoration:underline;
+  font-weight:bold
+}
 
 #btnEditAwal{
   margin-top:10px;
@@ -97,7 +102,6 @@ button{
     <option value="Sewa">Sewa</option>
   </select>
 
-  <!-- KHUSUS SEWA -->
   <div id="sewaBox" class="hidden">
     <label>Tanggal Mulai Sewa</label>
     <input type="date" id="sewaMulai">
@@ -120,10 +124,16 @@ button{
 
 <script>
 /* ===== UTIL ===== */
-function formatTanggal(t){
+function formatTanggalLengkap(t){
   if(!t) return "-";
   return new Date(t).toLocaleDateString("id-ID",{
     weekday:"long",day:"numeric",month:"long",year:"numeric"
+  });
+}
+function formatTanggalPendek(t){
+  if(!t) return "-";
+  return new Date(t).toLocaleDateString("id-ID",{
+    day:"numeric",month:"long",year:"numeric"
   });
 }
 
@@ -178,25 +188,30 @@ function tampilHeader(){
   const d=JSON.parse(localStorage.getItem("dataAwal"));
   if(!d) return;
 
-  let sewaInfo = "";
+  let statusInfo = "";
   if(d.status==="Sewa"){
-    sewaInfo = `
+    statusInfo = `
       <div class="header-line">
-        Status: Sewa (${formatTanggal(d.sewaMulai)} – ${formatTanggal(d.sewaAkhir)})
+        Status: Sewa (${formatTanggalPendek(d.sewaMulai)} – ${formatTanggalPendek(d.sewaAkhir)})
       </div>`;
   }else{
-    sewaInfo = `<div class="header-line">Status: Hak Milik</div>`;
+    statusInfo = `<div class="header-line">Status: Hak Milik</div>`;
   }
 
   headerInfo.innerHTML=`
     <div class="header-main">${d.komoditi}</div>
     <div class="header-sub">${d.jumlah} batang | ${d.luas} Ha</div>
-    <div class="header-line">Desa ${d.desa}</div>
+
     <div class="header-line">Pemilik Lahan: ${d.pemilik}</div>
-    ${sewaInfo}
-    <div class="header-line">🌱 Olah Lahan: ${formatTanggal(d.olah)}</div>
-    <div class="header-line">🌾 Tanam: ${formatTanggal(d.tanam)}</div>
-    <div class="header-link">📍 <a href="${d.lokasi}" target="_blank">Lihat Lokasi</a></div>
+    ${statusInfo}
+
+    <div class="header-group">
+      <div class="header-line">Desa ${d.desa}</div>
+      <div class="header-link">📍 <a href="${d.lokasi}" target="_blank">Lihat Lokasi</a></div>
+    </div>
+
+    <div class="header-line">🌱 Olah Lahan: ${formatTanggalLengkap(d.olah)}</div>
+    <div class="header-line">🌾 Tanam: ${formatTanggalLengkap(d.tanam)}</div>
   `;
 }
 
