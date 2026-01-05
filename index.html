@@ -35,56 +35,26 @@ button{
 
 hr{margin:10px 0}
 
-/* ===== DATA AWAL MUSIM ===== */
 .row{
   display:flex;
   gap:8px;
   align-items:center;
 }
 
-.tgl-kanan{
-  width:160px;
-}
+.tgl-kanan{width:160px}
+.tgl-info{flex:1;font-size:18px;font-weight:bold}
 
-.tgl-info{
-  flex:1;
-  font-size:18px;
-  font-weight:bold;
-}
-
-/* ===== BELANJA ===== */
 .item-belanja{
   border:1px solid #ddd;
   border-radius:6px;
   padding:8px;
-  margin-top:8px;
-}
-
-.item-atas{
-  display:flex;
-  gap:6px;
-  align-items:center;
-}
-
-.item-atas .no{
-  width:36px;
-  text-align:center;
-  font-weight:bold;
-}
-
-.item-bawah{
-  display:flex;
-  gap:6px;
   margin-top:6px;
 }
 
-.item-bawah div{
-  flex:1;
-}
-
-.item-bawah label{
-  font-size:12px;
-  color:#555;
+.riwayat-item{
+  margin-top:6px;
+  padding-left:6px;
+  border-left:3px solid #2f7d32;
 }
 </style>
 </head>
@@ -95,7 +65,7 @@ hr{margin:10px 0}
 <p>Catatan kegiatan, biaya, dan modal</p>
 </header>
 
-<!-- ================= DATA AWAL MUSIM ================= -->
+<!-- DATA AWAL -->
 <div class="card">
 <b>📌 Data Awal Musim</b><br><br>
 
@@ -114,7 +84,7 @@ hr{margin:10px 0}
 <button onclick="simpanAwal()">Simpan Data Awal</button>
 </div>
 
-<!-- ================= KEGIATAN ================= -->
+<!-- KEGIATAN -->
 <div class="card">
 <b>📓 Catatan Kegiatan</b>
 
@@ -127,7 +97,7 @@ hr{margin:10px 0}
 <button onclick="simpanKegiatan()">💾 Simpan Kegiatan</button>
 </div>
 
-<!-- ================= BIAYA & MODAL ================= -->
+<!-- BIAYA -->
 <div class="card">
 <b>💰 Catatan Biaya & Modal</b>
 
@@ -142,7 +112,6 @@ hr{margin:10px 0}
 </select>
 
 <div id="belanjaBox"></div>
-
 <button onclick="tambahItem()">➕ Tambah Item Belanja</button>
 
 <b>Keterangan (Upah / Modal)</b>
@@ -154,21 +123,21 @@ hr{margin:10px 0}
 <button onclick="simpanBiaya()">💾 Simpan</button>
 </div>
 
-<!-- ================= RINGKASAN & RIWAYAT ================= -->
+<!-- RINGKASAN & RIWAYAT -->
 <div class="card" id="ringkasan"></div>
 <div class="card" id="riwayat"></div>
 
 <script>
 let itemsBelanja=[];
 
-/* ===== UTIL ===== */
+/* UTIL */
 function formatHari(t){
   return new Date(t).toLocaleDateString("id-ID",{
     weekday:"long",day:"numeric",month:"long",year:"numeric"
   });
 }
 
-/* ===== DATA AWAL ===== */
+/* DATA AWAL */
 function simpanAwal(){
   localStorage.setItem("olah",olah.value);
   localStorage.setItem("tanam",tanam.value);
@@ -179,12 +148,11 @@ function tampilAwal(){
   if(olah.value) infoOlah.innerText=formatHari(olah.value);
   if(tanam.value) infoTanam.innerText=formatHari(tanam.value);
 }
-
 olah.value=localStorage.getItem("olah")||"";
 tanam.value=localStorage.getItem("tanam")||"";
 tampilAwal();
 
-/* ===== BELANJA ===== */
+/* BELANJA */
 function toggleBelanja(){
   belanjaBox.style.display=jenis.value==="Belanja"?"block":"none";
 }
@@ -204,36 +172,15 @@ function renderBelanja(){
 
     belanjaBox.innerHTML+=`
     <div class="item-belanja">
-      <div class="item-atas">
-        <div class="no">${i+1}</div>
-        <input placeholder="Nama Barang"
-          value="${it.nama}"
-          onchange="itemsBelanja[${i}].nama=this.value">
-      </div>
-
-      <div class="item-bawah">
-        <div>
-          <label>Jumlah</label>
-          <input type="number" value="${it.qty}"
-            onchange="itemsBelanja[${i}].qty=this.value;renderBelanja()">
-        </div>
-        <div>
-          <label>Harga / Item</label>
-          <input type="number" value="${it.harga}"
-            onchange="itemsBelanja[${i}].harga=this.value;renderBelanja()">
-        </div>
-        <div>
-          <label>Total</label>
-          <input value="${sub.toLocaleString()}" disabled>
-        </div>
-      </div>
+      <b>${i+1}. ${it.nama || "Nama Barang"}</b><br>
+      ${it.qty} x ${it.harga.toLocaleString()} = <b>${sub.toLocaleString()}</b>
     </div>`;
   });
 
   belanjaBox.innerHTML+=`<hr><b>Grand Total: Rp ${total.toLocaleString()}</b>`;
 }
 
-/* ===== SIMPAN BIAYA ===== */
+/* SIMPAN */
 function simpanBiaya(){
   let data=JSON.parse(localStorage.getItem("biaya"))||[];
   let total=0;
@@ -251,49 +198,55 @@ function simpanBiaya(){
   tampil();
 }
 
-/* ===== KEGIATAN ===== */
 function simpanKegiatan(){
   let data=JSON.parse(localStorage.getItem("kegiatan"))||[];
-  const olahDate=new Date(localStorage.getItem("olah"));
-  const tanamDate=new Date(localStorage.getItem("tanam"));
-  const t=new Date(tglKegiatan.value);
-
-  const hariKe = isNaN(olahDate)?null:Math.floor((t-olahDate)/86400000)+1;
-  const hst = isNaN(tanamDate)?null:Math.floor((t-tanamDate)/86400000);
-
-  data.push({tanggal:tglKegiatan.value,hariKe,hst,teks:kegiatan.value});
+  data.push({tanggal:tglKegiatan.value,teks:kegiatan.value});
   localStorage.setItem("kegiatan",JSON.stringify(data));
   tampil();
 }
 
-/* ===== RIWAYAT & RINGKASAN ===== */
+/* RIWAYAT TERKELOMPOK */
 function tampil(){
-  const k=JSON.parse(localStorage.getItem("kegiatan"))||[];
-  const b=JSON.parse(localStorage.getItem("biaya"))||[];
-  let modal=0,keluar=0;
+  const keg=JSON.parse(localStorage.getItem("kegiatan"))||[];
+  const bio=JSON.parse(localStorage.getItem("biaya"))||[];
 
-  riwayat.innerHTML="<h3>📖 Riwayat</h3>";
+  let gabung={};
 
-  k.forEach(x=>{
-    riwayat.innerHTML+=`
-    <div class="card">
-      <b>${formatHari(x.tanggal)}</b><br>
-      Hari ke-${x.hariKe} | HST ${x.hst}<br>
-      ${x.teks}
-    </div>`;
+  keg.forEach(k=>{
+    if(!gabung[k.tanggal]) gabung[k.tanggal]=[];
+    gabung[k.tanggal].push({tipe:"kegiatan",data:k});
   });
 
-  b.forEach(x=>{
-    if(x.jenis==="Modal") modal+=x.total;
-    else keluar+=x.total;
+  bio.forEach(b=>{
+    if(!gabung[b.tanggal]) gabung[b.tanggal]=[];
+    gabung[b.tanggal].push({tipe:"biaya",data:b});
+  });
 
-    riwayat.innerHTML+=`
-    <div class="card">
-      <b>${formatHari(x.tanggal)}</b><br>
-      ${x.jenis}<br>
-      ${x.items?x.items.map((i,n)=>`${n+1}. ${i.nama} ${i.qty} x ${i.harga.toLocaleString()}`).join("<br>"):""}
-      <br><b>Rp ${x.total.toLocaleString()}</b>
-    </div>`;
+  const tanggalUrut=Object.keys(gabung).sort((a,b)=>new Date(a)-new Date(b));
+
+  riwayat.innerHTML="<h3>📖 Riwayat</h3>";
+  let modal=0,keluar=0;
+
+  tanggalUrut.forEach(tgl=>{
+    riwayat.innerHTML+=`<div class="card"><b>${formatHari(tgl)}</b>`;
+
+    gabung[tgl].forEach(item=>{
+      if(item.tipe==="kegiatan"){
+        riwayat.innerHTML+=`
+        <div class="riwayat-item">📓 ${item.data.teks}</div>`;
+      }else{
+        if(item.data.jenis==="Modal") modal+=item.data.total;
+        else keluar+=item.data.total;
+
+        riwayat.innerHTML+=`
+        <div class="riwayat-item">
+          ${item.data.jenis==="Belanja"?"🧾":"💰"} ${item.data.jenis}
+          - Rp ${item.data.total.toLocaleString()}
+        </div>`;
+      }
+    });
+
+    riwayat.innerHTML+=`</div>`;
   });
 
   ringkasan.innerHTML=`
