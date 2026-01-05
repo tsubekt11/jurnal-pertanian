@@ -33,14 +33,7 @@ button{
   font-size:15px
 }
 
-hr{margin:10px 0}
-
-.row{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-
+.row{display:flex;gap:8px;align-items:center}
 .tgl-kanan{width:160px}
 .tgl-info{flex:1;font-size:18px;font-weight:bold}
 
@@ -48,14 +41,16 @@ hr{margin:10px 0}
   border:1px solid #ddd;
   border-radius:6px;
   padding:8px;
-  margin-top:6px;
+  margin-top:6px
 }
 
 .riwayat-item{
-  margin-top:6px;
+  margin-top:4px;
   padding-left:6px;
-  border-left:3px solid #2f7d32;
+  border-left:3px solid #2f7d32
 }
+
+hr{margin:10px 0}
 </style>
 </head>
 
@@ -123,14 +118,12 @@ hr{margin:10px 0}
 <button onclick="simpanBiaya()">💾 Simpan</button>
 </div>
 
-<!-- RINGKASAN & RIWAYAT -->
 <div class="card" id="ringkasan"></div>
 <div class="card" id="riwayat"></div>
 
 <script>
 let itemsBelanja=[];
 
-/* UTIL */
 function formatHari(t){
   return new Date(t).toLocaleDateString("id-ID",{
     weekday:"long",day:"numeric",month:"long",year:"numeric"
@@ -148,13 +141,14 @@ function tampilAwal(){
   if(olah.value) infoOlah.innerText=formatHari(olah.value);
   if(tanam.value) infoTanam.innerText=formatHari(tanam.value);
 }
+
 olah.value=localStorage.getItem("olah")||"";
 tanam.value=localStorage.getItem("tanam")||"";
 tampilAwal();
 
 /* BELANJA */
 function toggleBelanja(){
-  belanjaBox.style.display=jenis.value==="Belanja"?"block":"none";
+  belanjaBox.style.display = jenis.value==="Belanja" ? "block" : "none";
 }
 
 function tambahItem(){
@@ -167,96 +161,146 @@ function renderBelanja(){
   let total=0;
 
   itemsBelanja.forEach((it,i)=>{
-    const sub=it.qty*it.harga;
-    total+=sub;
+    const sub = it.qty * it.harga;
+    total += sub;
 
-    belanjaBox.innerHTML+=`
+    belanjaBox.innerHTML += `
     <div class="item-belanja">
       <b>${i+1}. ${it.nama || "Nama Barang"}</b><br>
       ${it.qty} x ${it.harga.toLocaleString()} = <b>${sub.toLocaleString()}</b>
     </div>`;
   });
 
-  belanjaBox.innerHTML+=`<hr><b>Grand Total: Rp ${total.toLocaleString()}</b>`;
+  belanjaBox.innerHTML += `<hr><b>Total Belanja: Rp ${total.toLocaleString()}</b>`;
 }
 
 /* SIMPAN */
 function simpanBiaya(){
-  let data=JSON.parse(localStorage.getItem("biaya"))||[];
-  let total=0;
+  let data = JSON.parse(localStorage.getItem("biaya")) || [];
+  let total = 0;
 
   if(jenis.value==="Belanja"){
-    itemsBelanja.forEach(i=>total+=i.qty*i.harga);
-    data.push({tanggal:tglBiaya.value,jenis:"Belanja",items:itemsBelanja,total});
+    itemsBelanja.forEach(i=> total += i.qty*i.harga);
+    data.push({
+      tanggal: tglBiaya.value,
+      jenis: "Belanja",
+      items: itemsBelanja,
+      total: total
+    });
     itemsBelanja=[];
     renderBelanja();
   }else{
-    data.push({tanggal:tglBiaya.value,jenis:jenis.value,ket:ket.value,total:+jumlah.value});
+    data.push({
+      tanggal: tglBiaya.value,
+      jenis: jenis.value,
+      ket: ket.value,
+      total: +jumlah.value
+    });
   }
 
-  localStorage.setItem("biaya",JSON.stringify(data));
+  localStorage.setItem("biaya", JSON.stringify(data));
   tampil();
 }
 
 function simpanKegiatan(){
-  let data=JSON.parse(localStorage.getItem("kegiatan"))||[];
-  data.push({tanggal:tglKegiatan.value,teks:kegiatan.value});
-  localStorage.setItem("kegiatan",JSON.stringify(data));
+  let data = JSON.parse(localStorage.getItem("kegiatan")) || [];
+  data.push({
+    tanggal: tglKegiatan.value,
+    teks: kegiatan.value
+  });
+  localStorage.setItem("kegiatan", JSON.stringify(data));
   tampil();
 }
 
 /* RIWAYAT TERKELOMPOK */
 function tampil(){
-  const keg=JSON.parse(localStorage.getItem("kegiatan"))||[];
-  const bio=JSON.parse(localStorage.getItem("biaya"))||[];
+  const keg = JSON.parse(localStorage.getItem("kegiatan")) || [];
+  const bio = JSON.parse(localStorage.getItem("biaya")) || [];
 
-  let gabung={};
+  let grup = {};
+  let modal=0, keluar=0;
 
   keg.forEach(k=>{
-    if(!gabung[k.tanggal]) gabung[k.tanggal]=[];
-    gabung[k.tanggal].push({tipe:"kegiatan",data:k});
+    if(!grup[k.tanggal]) grup[k.tanggal]=[];
+    grup[k.tanggal].push({tipe:"kegiatan", data:k});
   });
 
   bio.forEach(b=>{
-    if(!gabung[b.tanggal]) gabung[b.tanggal]=[];
-    gabung[b.tanggal].push({tipe:"biaya",data:b});
+    if(!grup[b.tanggal]) grup[b.tanggal]=[];
+    grup[b.tanggal].push({tipe:"biaya", data:b});
   });
 
-  const tanggalUrut=Object.keys(gabung).sort((a,b)=>new Date(a)-new Date(b));
+  const urut = Object.keys(grup).sort((a,b)=>new Date(a)-new Date(b));
 
   riwayat.innerHTML="<h3>📖 Riwayat</h3>";
-  let modal=0,keluar=0;
 
-  tanggalUrut.forEach(tgl=>{
+  urut.forEach(tgl=>{
     riwayat.innerHTML+=`<div class="card"><b>${formatHari(tgl)}</b>`;
 
-    gabung[tgl].forEach(item=>{
-      if(item.tipe==="kegiatan"){
+    grup[tgl].forEach(x=>{
+      if(x.tipe==="kegiatan"){
         riwayat.innerHTML+=`
-        <div class="riwayat-item">📓 ${item.data.teks}</div>`;
-      }else{
-        if(item.data.jenis==="Modal") modal+=item.data.total;
-        else keluar+=item.data.total;
-
-        riwayat.innerHTML+=`
-        <div class="riwayat-item">
-          ${item.data.jenis==="Belanja"?"🧾":"💰"} ${item.data.jenis}
-          - Rp ${item.data.total.toLocaleString()}
-        </div>`;
+          <div class="riwayat-item">📓 ${x.data.teks}</div>`;
       }
     });
+
+    const belanja = grup[tgl].filter(x=>x.data.jenis==="Belanja");
+    if(belanja.length){
+      riwayat.innerHTML+=`<hr><b>🧾 Belanja</b>`;
+      belanja.forEach(b=>{
+        b.data.items.forEach((i,n)=>{
+          riwayat.innerHTML+=`
+            <div class="riwayat-item">
+              ${n+1}. ${i.nama} — ${i.qty} x ${i.harga.toLocaleString()}
+              = <b>${(i.qty*i.harga).toLocaleString()}</b>
+            </div>`;
+        });
+        riwayat.innerHTML+=`
+          <div class="riwayat-item">
+            <b>Total Belanja: Rp ${b.data.total.toLocaleString()}</b>
+          </div>`;
+        keluar+=b.data.total;
+      });
+    }
+
+    const upah = grup[tgl].filter(x=>x.data.jenis==="Upah");
+    if(upah.length){
+      riwayat.innerHTML+=`<hr><b>👷 Upah</b>`;
+      upah.forEach(u=>{
+        riwayat.innerHTML+=`
+          <div class="riwayat-item">
+            ${u.data.ket}<br>
+            <b>Rp ${u.data.total.toLocaleString()}</b>
+          </div>`;
+        keluar+=u.data.total;
+      });
+    }
+
+    const modalMasuk = grup[tgl].filter(x=>x.data.jenis==="Modal");
+    if(modalMasuk.length){
+      riwayat.innerHTML+=`<hr><b>💵 Modal Masuk</b>`;
+      modalMasuk.forEach(m=>{
+        riwayat.innerHTML+=`
+          <div class="riwayat-item">
+            ${m.data.ket}<br>
+            <b>Rp ${m.data.total.toLocaleString()}</b>
+          </div>`;
+        modal+=m.data.total;
+      });
+    }
 
     riwayat.innerHTML+=`</div>`;
   });
 
   ringkasan.innerHTML=`
-  <b>📊 Ringkasan</b><br>
-  Modal Masuk: Rp ${modal.toLocaleString()}<br>
-  Total Biaya: Rp ${keluar.toLocaleString()}<br>
-  <b>Sisa Modal: Rp ${(modal-keluar).toLocaleString()}</b>`;
+    <b>📊 Ringkasan</b><br>
+    Modal Masuk: Rp ${modal.toLocaleString()}<br>
+    Total Biaya: Rp ${keluar.toLocaleString()}<br>
+    <b>Sisa Modal: Rp ${(modal-keluar).toLocaleString()}</b>`;
 }
 
 tampil();
 </script>
 </body>
 </html>
+
