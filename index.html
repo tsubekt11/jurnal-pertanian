@@ -38,7 +38,6 @@ button{
 .tgl-info{flex:1;font-size:18px;font-weight:bold}
 
 .hidden{display:none}
-
 hr{margin:12px 0}
 </style>
 </head>
@@ -50,7 +49,6 @@ hr{margin:12px 0}
   <div id="headerInfo"></div>
 </header>
 
-<!-- ================= DATA AWAL MUSIM ================= -->
 <div class="card" id="dataAwalBox">
 <b>📌 Data Awal Musim</b><br><br>
 
@@ -87,41 +85,47 @@ hr{margin:12px 0}
 </div>
 
 <script>
-function formatHari(t){
-  return new Date(t).toLocaleDateString("id-ID",{
+function amanTanggal(t){
+  if(!t) return "";
+  const d = new Date(t);
+  if(isNaN(d)) return "";
+  return d.toLocaleDateString("id-ID",{
     weekday:"long",day:"numeric",month:"long",year:"numeric"
   });
 }
 
-olah.onchange=()=>hariOlah.innerText=formatHari(olah.value);
-tanam.onchange=()=>hariTanam.innerText=formatHari(tanam.value);
-
 function simpanAwal(){
   const data={
-    komoditi:komoditi.value,
+    komoditi:komoditi.value.trim(),
     jumlahTanaman:jumlahTanaman.value,
     luasLahan:luasLahan.value,
-    desa:desa.value,
-    lokasiMap:lokasiMap.value,
+    desa:desa.value.trim(),
+    lokasiMap:lokasiMap.value.trim(),
     olah:olah.value,
     tanam:tanam.value
   };
+
+  if(!data.komoditi || !data.olah || !data.tanam){
+    alert("Mohon lengkapi data utama 🙏");
+    return;
+  }
+
   localStorage.setItem("data_awal",JSON.stringify(data));
   tampilDataAwal();
 }
 
 function tampilDataAwal(){
-  const d=JSON.parse(localStorage.getItem("data_awal"));
-  if(!d) return;
+  const d = JSON.parse(localStorage.getItem("data_awal"));
+  if(!d || !d.komoditi || !d.olah || !d.tanam) return;
 
   dataAwalBox.classList.add("hidden");
 
   headerInfo.innerHTML=`
-    <div style="font-size:14px;opacity:.9">
+    <div style="font-size:14px;opacity:.95">
       <b>${d.komoditi}</b> — ${d.jumlahTanaman} batang | ${d.luasLahan} Ha<br>
       Desa ${d.desa}<br>
-      🌱 Olah Lahan: ${formatHari(d.olah)}<br>
-      🌿 Tanam: ${formatHari(d.tanam)}<br>
+      🌱 Olah Lahan: ${amanTanggal(d.olah)}<br>
+      🌿 Tanam: ${amanTanggal(d.tanam)}<br>
       <a href="${d.lokasiMap}" target="_blank" style="color:#c8e6c9">📍 Lihat Lokasi</a>
       <br><br>
       <button onclick="ubahAwal()" style="background:#1b5e20">✏️ Ubah Data Awal</button>
@@ -133,6 +137,9 @@ function ubahAwal(){
   dataAwalBox.classList.remove("hidden");
   headerInfo.innerHTML="";
 }
+
+olah.onchange=()=>hariOlah.innerText=amanTanggal(olah.value);
+tanam.onchange=()=>hariTanam.innerText=amanTanggal(tanam.value);
 
 tampilDataAwal();
 </script>
