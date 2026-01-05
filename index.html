@@ -22,11 +22,7 @@ header *{color:#ffffff !important}
 .header-sub{font-size:14px}
 .header-line{margin:4px 0;font-size:14px}
 .header-group{margin:6px 0}
-.header-link a{
-  color:#ffffff;
-  text-decoration:underline;
-  font-weight:bold
-}
+.header-link a{color:#ffffff;text-decoration:underline;font-weight:bold}
 
 #btnEditAwal{
   margin-top:10px;
@@ -49,17 +45,26 @@ header *{color:#ffffff !important}
 .hidden{display:none}
 
 label{font-weight:bold;margin-top:8px;display:block}
-input,select,button{
+input,textarea,select,button{
   width:100%;
   padding:8px;
   margin-top:4px
 }
+textarea{resize:vertical}
 button{
   background:#2f7d32;
   color:#fff;
   border:none;
   border-radius:6px;
   margin-top:12px
+}
+
+.info-box{
+  background:#f0f7f0;
+  padding:8px;
+  border-radius:6px;
+  font-size:14px;
+  margin-top:8px
 }
 </style>
 </head>
@@ -97,18 +102,10 @@ button{
   <input id="pemilik">
 
   <label>Status Lahan</label>
-  <select id="statusLahan" onchange="toggleSewa()">
+  <select id="statusLahan">
     <option value="Hak Milik">Hak Milik</option>
     <option value="Sewa">Sewa</option>
   </select>
-
-  <div id="sewaBox" class="hidden">
-    <label>Tanggal Mulai Sewa</label>
-    <input type="date" id="sewaMulai">
-
-    <label>Tanggal Akhir Sewa</label>
-    <input type="date" id="sewaAkhir">
-  </div>
 
   <label>Lokasi Lahan (Link Google Maps)</label>
   <input id="lokasi">
@@ -122,24 +119,47 @@ button{
   <button onclick="simpanDataAwal()">💾 Simpan Data Awal</button>
 </div>
 
+<!-- ================= CATATAN KEGIATAN HARIAN ================= -->
+<div class="card">
+  <h3>📓 Catatan Kegiatan Harian</h3>
+
+  <label>Tanggal Kegiatan</label>
+  <input type="date" id="tglKegiatan" onchange="hitungHariHST()">
+
+  <label>Jenis Kegiatan</label>
+  <select id="jenisKegiatan">
+    <option value="">-- Pilih Jenis Kegiatan --</option>
+    <option>Olah Lahan</option>
+    <option>Tanam</option>
+    <option>Pemupukan</option>
+    <option>Penyemprotan</option>
+    <option>Penyiangan</option>
+    <option>Panen</option>
+    <option>Lainnya</option>
+  </select>
+
+  <label>Uraian Kegiatan</label>
+  <textarea id="uraian" placeholder="Contoh: Pemupukan NPK 200 kg/ha, tenaga 4 orang"></textarea>
+
+  <div class="info-box" id="infoHari">
+    Hari ke-: - | HST: -
+  </div>
+
+  <button onclick="simpanKegiatan()">💾 Simpan Kegiatan</button>
+</div>
+
+<!-- ================= RIWAYAT SEMENTARA ================= -->
+<div class="card" id="riwayat"></div>
+
 <script>
 /* ===== UTIL ===== */
-function formatTanggalLengkap(t){
-  if(!t) return "-";
+function formatTanggal(t){
   return new Date(t).toLocaleDateString("id-ID",{
     weekday:"long",day:"numeric",month:"long",year:"numeric"
   });
 }
-function formatTanggalPendek(t){
-  if(!t) return "-";
-  return new Date(t).toLocaleDateString("id-ID",{
-    day:"numeric",month:"long",year:"numeric"
-  });
-}
-
-/* ===== TOGGLE SEWA ===== */
-function toggleSewa(){
-  sewaBox.classList.toggle("hidden", statusLahan.value!=="Sewa");
+function selisihHari(t1,t2){
+  return Math.floor((new Date(t2)-new Date(t1))/(1000*60*60*24))+1;
 }
 
 /* ===== DATA AWAL ===== */
@@ -151,8 +171,6 @@ function simpanDataAwal(){
     desa:desa.value,
     pemilik:pemilik.value,
     status:statusLahan.value,
-    sewaMulai:sewaMulai.value,
-    sewaAkhir:sewaAkhir.value,
     lokasi:lokasi.value,
     olah:olah.value,
     tanam:tanam.value
@@ -173,13 +191,10 @@ function editAwal(){
   desa.value=d.desa||"";
   pemilik.value=d.pemilik||"";
   statusLahan.value=d.status||"Hak Milik";
-  sewaMulai.value=d.sewaMulai||"";
-  sewaAkhir.value=d.sewaAkhir||"";
   lokasi.value=d.lokasi||"";
   olah.value=d.olah||"";
   tanam.value=d.tanam||"";
 
-  toggleSewa();
   dataAwalCard.classList.remove("hidden");
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -188,32 +203,77 @@ function tampilHeader(){
   const d=JSON.parse(localStorage.getItem("dataAwal"));
   if(!d) return;
 
-  let statusInfo = "";
-  if(d.status==="Sewa"){
-    statusInfo = `
-      <div class="header-line">
-        Status: Sewa (${formatTanggalPendek(d.sewaMulai)} – ${formatTanggalPendek(d.sewaAkhir)})
-      </div>`;
-  }else{
-    statusInfo = `<div class="header-line">Status: Hak Milik</div>`;
-  }
-
   headerInfo.innerHTML=`
     <div class="header-main">${d.komoditi}</div>
     <div class="header-sub">${d.jumlah} batang | ${d.luas} Ha</div>
-
     <div class="header-line">Pemilik Lahan: ${d.pemilik}</div>
-    ${statusInfo}
-
-    <div class="header-group">
-      <div class="header-line">Desa ${d.desa}</div>
-      <div class="header-link">📍 <a href="${d.lokasi}" target="_blank">Lihat Lokasi</a></div>
-    </div>
-
-    <div class="header-line">⛏️ Olah Lahan: ${formatTanggalLengkap(d.olah)}</div>
-<div class="header-line">🌱 Tanam: ${formatTanggalLengkap(d.tanam)}</div>
-
+    <div class="header-line">Desa ${d.desa} | <a href="${d.lokasi}" target="_blank">📍 Lihat Lokasi</a></div>
+    <div class="header-line">⛏️ Olah Lahan: ${formatTanggal(d.olah)}</div>
+    <div class="header-line">🌱 Tanam: ${formatTanggal(d.tanam)}</div>
   `;
+}
+
+/* ===== HITUNG HARI & HST ===== */
+function hitungHariHST(){
+  const d=JSON.parse(localStorage.getItem("dataAwal"));
+  const t=tglKegiatan.value;
+
+  if(!d || !t){
+    infoHari.innerText="Hari ke-: - | HST: -";
+    return;
+  }
+
+  const hariKe = selisihHari(d.olah, t);
+  const hst = selisihHari(d.tanam, t);
+
+  infoHari.innerText = `Hari ke-${hariKe} | HST ${hst}`;
+}
+
+/* ===== SIMPAN KEGIATAN ===== */
+function simpanKegiatan(){
+  const d=JSON.parse(localStorage.getItem("dataAwal"));
+  if(!d) return alert("Data Awal Musim belum diisi");
+
+  if(!tglKegiatan.value) return alert("Tanggal kegiatan belum dipilih");
+  if(!jenisKegiatan.value) return alert("Jenis kegiatan belum dipilih");
+
+  const hariKe = selisihHari(d.olah, tglKegiatan.value);
+  const hst = selisihHari(d.tanam, tglKegiatan.value);
+
+  const data=JSON.parse(localStorage.getItem("kegiatan"))||[];
+  data.push({
+    tanggal:tglKegiatan.value,
+    jenis:jenisKegiatan.value,
+    uraian:uraian.value,
+    hariKe,
+    hst
+  });
+
+  localStorage.setItem("kegiatan",JSON.stringify(data));
+
+  // reset input
+  jenisKegiatan.value="";
+  uraian.value="";
+  infoHari.innerText="Hari ke-: - | HST: -";
+
+  tampilRiwayat();
+}
+
+/* ===== RIWAYAT SEMENTARA ===== */
+function tampilRiwayat(){
+  const data=JSON.parse(localStorage.getItem("kegiatan"))||[];
+  riwayat.innerHTML="<h3>📖 Riwayat Kegiatan</h3>";
+
+  data.sort((a,b)=>new Date(a.tanggal)-new Date(b.tanggal))
+  .forEach(x=>{
+    riwayat.innerHTML+=`
+      <div class="card">
+        <b>${formatTanggal(x.tanggal)}</b><br>
+        Hari ke-${x.hariKe} | HST ${x.hst}<br>
+        <b>${x.jenis}</b><br>
+        ${x.uraian}
+      </div>`;
+  });
 }
 
 /* ===== INIT ===== */
@@ -222,11 +282,8 @@ if(dataAwalTersimpan){
   tampilHeader();
   dataAwalCard.classList.add("hidden");
   btnEditAwal.classList.remove("hidden");
-}else{
-  dataAwalCard.classList.remove("hidden");
-  btnEditAwal.classList.add("hidden");
 }
-toggleSewa();
+tampilRiwayat();
 </script>
 
 </body>
