@@ -8,48 +8,17 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial;background:#f4f7f4}
-
-header{
-  background:#2f7d32;
-  padding:16px;
-  text-align:center;
-  color:#fff;
-}
-header *{color:#fff !important}
-
-.card{
-  background:#fff;
-  margin:12px;
-  padding:12px;
-  border-radius:10px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1)
-}
-
-label{font-weight:bold;display:block;margin-top:8px}
-input,textarea,button{
-  width:100%;
-  padding:8px;
-  margin-top:4px
-}
-button{
-  background:#2f7d32;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  margin-top:12px
-}
-
-.checkbox-group label{
-  font-weight:normal;
-  display:block;
-  margin-top:4px
-}
-
+header{background:#2f7d32;color:#fff;padding:18px;text-align:center}
+.card{background:#fff;margin:12px;padding:14px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+label{font-weight:bold;display:block;margin-top:10px}
+input,textarea,select,button{width:100%;padding:8px;margin-top:6px}
+button{background:#2f7d32;color:#fff;border:none;border-radius:8px;margin-top:14px;font-size:15px}
 .hidden{display:none}
-
-.small{font-size:13px;color:#555}
-.row{display:flex;gap:6px;margin-top:6px}
-.row input{flex:1}
+.small{font-size:13px;color:#444;margin-top:4px}
+hr{margin:12px 0}
+.kegiatan-list label{font-weight:normal}
+.bahan-row{display:flex;gap:6px;margin-top:6px}
+.bahan-row input{flex:1}
 </style>
 </head>
 
@@ -57,59 +26,142 @@ button{
 
 <header>
   <h2>🌾 Jurnal Harian Pertanian</h2>
+  <div id="infoHeader" class="small"></div>
+  <button onclick="editDataAwal()">✏️ Ubah Data Awal</button>
 </header>
+
+<!-- ================= DATA AWAL MUSIM ================= -->
+<div class="card" id="dataAwalCard">
+  <h3>📌 Data Awal Musim</h3>
+
+  <label>Nama Komoditi</label>
+  <input id="komoditi">
+
+  <label>Jumlah Tanaman (batang)</label>
+  <input id="jumlah" type="number">
+
+  <label>Luas Lahan (Ha)</label>
+  <input id="luas" type="number" step="0.01">
+
+  <label>Nama Desa</label>
+  <input id="desa">
+
+  <label>Lokasi Lahan (Link Google Maps)</label>
+  <input id="lokasi">
+
+  <label>Tanggal Mulai Olah Lahan (Hari ke-1)</label>
+  <input id="olah" type="date">
+
+  <label>Tanggal Tanam</label>
+  <input id="tanam" type="date">
+
+  <button onclick="simpanDataAwal()">💾 Simpan Data Awal</button>
+</div>
 
 <!-- ================= CATATAN KEGIATAN ================= -->
 <div class="card">
   <h3>📓 Catatan Kegiatan Harian</h3>
 
   <label>Tanggal Kegiatan</label>
-  <input type="date" id="tgl">
+  <input type="date" id="tglKegiatan">
 
   <label>Jenis Kegiatan (boleh lebih dari satu)</label>
-  <div class="checkbox-group" id="jenisGroup">
+  <div class="kegiatan-list">
     <label><input type="checkbox" value="Olah Lahan"> Olah Lahan</label>
     <label><input type="checkbox" value="Tanam"> Tanam</label>
     <label><input type="checkbox" value="Pemupukan Padat"> Pemupukan Padat</label>
-    <label><input type="checkbox" value="Pemupukan Cair" onchange="cekBahan()"> Pemupukan Cair</label>
-    <label><input type="checkbox" value="Penyemprotan" onchange="cekBahan()"> Penyemprotan</label>
+    <label><input type="checkbox" value="Pemupukan Cair" onchange="toggleCair()"> Pemupukan Cair</label>
+    <label><input type="checkbox" value="Penyemprotan" onchange="toggleCair()"> Penyemprotan</label>
     <label><input type="checkbox" value="Penyiangan"> Penyiangan</label>
     <label><input type="checkbox" value="Panen"> Panen</label>
     <label><input type="checkbox" value="Lainnya"> Lainnya</label>
   </div>
 
-  <label>Uraian Umum</label>
-  <textarea id="uraian" placeholder="Catatan tambahan kegiatan hari ini"></textarea>
-
-  <!-- ===== FORM BAHAN ===== -->
-  <div id="bahanBox" class="hidden">
+  <!-- DETAIL CAIR -->
+  <div id="cairBox" class="hidden">
     <hr>
     <b>🧪 Detail Bahan & Dosis</b>
 
-    <label>Total Air Digunakan (liter)</label>
-    <input type="number" id="air">
-
-    <label>Daftar Bahan</label>
-    <div id="listBahan"></div>
-
+    <div id="bahanList"></div>
     <button onclick="tambahBahan()">➕ Tambah Bahan</button>
+
+    <label>Total Air Digunakan (Liter)</label>
+    <input id="totalAir" type="number">
   </div>
 
-  <button onclick="simpan()">💾 Simpan Kegiatan</button>
+  <label>Catatan Tambahan</label>
+  <textarea id="catatan"></textarea>
+
+  <button onclick="simpanKegiatan()">💾 Simpan Kegiatan</button>
 </div>
 
-<div class="card" id="riwayat"></div>
+<!-- ================= RIWAYAT ================= -->
+<div class="card" id="riwayat">
+  <h3>📖 Riwayat</h3>
+</div>
 
 <script>
+/* ========= HEADER & DATA AWAL ========= */
+document.addEventListener("DOMContentLoaded", renderHeader);
+
+function simpanDataAwal(){
+  const lama = JSON.parse(localStorage.getItem("dataAwal")) || {};
+  const data = {
+    ...lama,
+    komoditi: komoditi.value,
+    jumlah: jumlah.value,
+    luas: luas.value,
+    desa: desa.value,
+    lokasi: lokasi.value,
+    olah: olah.value,
+    tanam: tanam.value
+  };
+  localStorage.setItem("dataAwal", JSON.stringify(data));
+  dataAwalCard.classList.add("hidden");
+  renderHeader();
+}
+
+function renderHeader(){
+  const data = JSON.parse(localStorage.getItem("dataAwal"));
+  if(!data){
+    infoHeader.innerHTML = "Data awal musim belum diisi";
+    dataAwalCard.classList.remove("hidden");
+    return;
+  }
+
+  infoHeader.innerHTML = `
+    <b>${data.komoditi}</b> — ${data.jumlah} batang | ${data.luas} Ha<br>
+    Desa ${data.desa}<br>
+    🪓 Olah: ${fmt(data.olah)}<br>
+    🌱 Tanam: ${fmt(data.tanam)}<br>
+    📍 <a href="${data.lokasi}" target="_blank" style="color:#ffeb3b">Lihat Lokasi</a>
+  `;
+}
+
+function editDataAwal(){
+  const data = JSON.parse(localStorage.getItem("dataAwal")) || {};
+  komoditi.value=data.komoditi||"";
+  jumlah.value=data.jumlah||"";
+  luas.value=data.luas||"";
+  desa.value=data.desa||"";
+  lokasi.value=data.lokasi||"";
+  olah.value=data.olah||"";
+  tanam.value=data.tanam||"";
+  dataAwalCard.classList.remove("hidden");
+}
+
+function fmt(t){
+  if(!t) return "-";
+  return new Date(t).toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+}
+
+/* ========= KEGIATAN ========= */
 let bahan=[];
 
-function cekBahan(){
-  const cek = [...document.querySelectorAll('#jenisGroup input:checked')]
-              .map(x=>x.value);
-  bahanBox.classList.toggle(
-    'hidden',
-    !cek.includes("Pemupukan Cair") && !cek.includes("Penyemprotan")
-  );
+function toggleCair(){
+  const cek=[...document.querySelectorAll('input[type=checkbox]')]
+    .some(c=>c.checked && (c.value=="Pemupukan Cair"||c.value=="Penyemprotan"));
+  cairBox.classList.toggle("hidden",!cek);
 }
 
 function tambahBahan(){
@@ -118,69 +170,46 @@ function tambahBahan(){
 }
 
 function renderBahan(){
-  listBahan.innerHTML="";
+  bahanList.innerHTML="";
   bahan.forEach((b,i)=>{
-    listBahan.innerHTML+=`
-      <div class="row">
-        <input placeholder="Nama bahan"
-          value="${b.nama}"
-          onchange="bahan[${i}].nama=this.value">
-        <input placeholder="Dosis (ml / g per liter)"
-          value="${b.dosis}"
-          onchange="bahan[${i}].dosis=this.value">
+    bahanList.innerHTML+=`
+      <div class="bahan-row">
+        <input placeholder="Nama Bahan" onchange="bahan[${i}].nama=this.value">
+        <input placeholder="Dosis ml/g per liter" onchange="bahan[${i}].dosis=this.value">
       </div>`;
   });
 }
 
-function simpan(){
-  if(!tgl.value) return alert("Tanggal belum diisi");
-
-  const jenis=[...document.querySelectorAll('#jenisGroup input:checked')]
-              .map(x=>x.value);
-  if(jenis.length===0) return alert("Pilih minimal satu kegiatan");
-
-  const data=JSON.parse(localStorage.getItem("kegiatan"))||[];
-  data.push({
-    tanggal:tgl.value,
+function simpanKegiatan(){
+  const jenis=[...document.querySelectorAll('.kegiatan-list input:checked')].map(c=>c.value);
+  const data={
+    tanggal: tglKegiatan.value,
     jenis,
-    uraian:uraian.value,
-    air:air.value||null,
-    bahan
-  });
-
-  localStorage.setItem("kegiatan",JSON.stringify(data));
-
-  // reset
-  document.querySelectorAll('#jenisGroup input').forEach(x=>x.checked=false);
-  bahan=[];
-  listBahan.innerHTML="";
-  air.value="";
-  bahanBox.classList.add("hidden");
-  uraian.value="";
-
-  tampil();
+    bahan,
+    totalAir: totalAir.value,
+    catatan: catatan.value
+  };
+  const arr=JSON.parse(localStorage.getItem("kegiatan"))||[];
+  arr.push(data);
+  localStorage.setItem("kegiatan",JSON.stringify(arr));
+  tampilRiwayat();
+  alert("Kegiatan tersimpan Alhamdulillah 🤲");
 }
 
-function tampil(){
+function tampilRiwayat(){
   const data=JSON.parse(localStorage.getItem("kegiatan"))||[];
-  riwayat.innerHTML="<h3>📖 Riwayat Kegiatan</h3>";
-
-  data.forEach(x=>{
+  riwayat.innerHTML="<h3>📖 Riwayat</h3>";
+  data.forEach(d=>{
     riwayat.innerHTML+=`
       <div class="card">
-        <b>${x.tanggal}</b><br>
-        <b>Kegiatan:</b> ${x.jenis.join(", ")}<br>
-        ${x.uraian}<br>
-        ${x.air?`💧 Air: ${x.air} liter<br>`:""}
-        ${x.bahan?.length?`
-          <u>Bahan:</u><br>
-          ${x.bahan.map(b=>`- ${b.nama} (${b.dosis})`).join("<br>")}
-        `:""}
+        <b>${fmt(d.tanggal)}</b><br>
+        ${d.jenis.join(", ")}<br>
+        ${d.bahan?.map(b=>`• ${b.nama} (${b.dosis})`).join("<br>")||""}
       </div>`;
   });
 }
 
-tampil();
+tampilRiwayat();
 </script>
 
 </body>
